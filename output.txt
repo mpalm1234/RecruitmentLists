@@ -1,0 +1,68 @@
+Bump group filename: input.txt
+Number of PNMs: 60
+Number of legacies: 2
+Position of legacy 1: 5
+Position of legacy 2: 23
+Gabrielle Jervis == Spot: 0, Scoop: 0
+Samm Cacioppo == Spot: 0, Scoop: 0
+Amanda Piccione == Spot: 0, Scoop: 0
+Mackenzie Crane == Spot: 0, Scoop: 0
+Leah Campano == Spot: 0, Scoop: 0
+Molly Volk == Spot: 0, Scoop: 0
+Krista Brickel == Spot: 0, Scoop: 0
+Alexandra Dagnell == Spot: 0, Scoop: 0
+Isabel Ryan == Spot: 0, Scoop: 0
+Rachael	Braender-LiPira == Spot: 0, Scoop: 0
+Sarah Hawxhurst == Spot: 0, Scoop: 0
+Laura Chwatel == Spot: 0, Scoop: 0
+Kaitlyn Felicetti == Spot: 0, Scoop: 0
+Lily Decaro == Spot: 0, Scoop: 0
+Sarah Beamish == Spot: 1, Scoop: 2
+Erin Callahan == Spot: 2, Scoop: 1
+Laura Volk == Spot: 3, Scoop: 1
+Elizabeth Kirby == Spot: 4, Scoop: 1 *****
+Alyssa Ledwon == Spot: 5, Scoop: 1
+Ella Tomko == Spot: 6, Scoop: 2
+Rachael	Shaw == Spot: 7, Scoop: 2
+Caitlyn Scala == Spot: 8, Scoop: 2
+Elizabeth Hodsdon == Spot: 9, Scoop: 2
+Sam Aronowitz == Spot: 10, Scoop: 2
+Jenna Miller == Spot: 11, Scoop: 2
+Kim Yap == Spot: 12, Scoop: 2
+Taylor Pearson == Spot: 13, Scoop: 1
+Meredith Klabnik == Spot: 14, Scoop: 1
+Danielle Barra == Spot: 15, Scoop: 1 *****
+Marissa Hensel == Spot: 16, Scoop: 1
+Kaitlyn	Hahn == Spot: 17, Scoop: 2
+Grace Malanga == Spot: 18, Scoop: 2
+Sara Bragg == Spot: 19, Scoop: 2
+Rachel Susie == Spot: 20, Scoop: 1
+Kellie Roy == Spot: 21, Scoop: 1
+Lauren Romeo == Spot: 22, Scoop: 1
+Courtney Ryan == Spot: 23, Scoop: 1
+Rachel Gottlieb == Spot: 24, Scoop: 1
+Deanna Tiso == Spot: 25, Scoop: 1
+Melissa	Giraldo == Spot: 26, Scoop: 1
+Francesca Capucciati == Spot: 27, Scoop: 1
+Katie Spillan == Spot: 28, Scoop: 1
+Megan Botsch == Spot: 29, Scoop: 1
+Evelyn Bedzyk == Spot: 30, Scoop: 1
+Alexa Georgeton == Spot: 31, Scoop: 1
+Julie D'Agostino == Spot: 32, Scoop: 1
+Marisa Capucciati == Spot: 33, Scoop: 1
+Taylor Marschean == Spot: 34, Scoop: 1
+Anna Platt == Spot: 35, Scoop: 1
+Taylor Miller == Spot: 36, Scoop: 1
+Kelly Gilmartin == Spot: 37, Scoop: 1
+Jade Carson == Spot: 38, Scoop: 1
+Maeve Cronin == Spot: 39, Scoop: 1
+Zoe Reiter == Spot: 40, Scoop: 1
+Bari Sugarman == Spot: 41, Scoop: 1
+Jenna Landesman == Spot: 42, Scoop: 1
+Kim Begley == Spot: 43, Scoop: 1
+Sarah Durham == Spot: 44, Scoop: 1
+Clare Brassil == Spot: 45, Scoop: 1
+Lizzie Goetz == Spot: 46, Scoop: 1
+Madison	Fuller == Spot: 47, Scoop: 1
+Jennifer Case == Spot: 48, Scoop: 1
+Allie Loren == Spot: 49, Scoop: 1
