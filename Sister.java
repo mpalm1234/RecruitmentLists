@@ -2,13 +2,13 @@
 public class Sister {
 
 	String name;
-	BumpGroup group;
+	int group;
 	int spot;
 
 	// Constructor:
-	public Sister(String n, BumpGroup bg, int s) {
+	public Sister(String n, int g, int s) {
 		this.name = n;
-		this.group = bg;
+		this.group = g;
 		this.spot = s;
 	}
 	
@@ -20,11 +20,11 @@ public class Sister {
 		this.name = name;
 	}
 	
-	public BumpGroup getGroup() {
+	public int getGroup() {
 		return group;
 	}
 
-	public void setGroup(BumpGroup group) {
+	public void setGroup(int group) {
 		this.group = group;
 	}
 	
