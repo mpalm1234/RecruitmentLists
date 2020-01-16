@@ -5,6 +5,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -16,32 +17,23 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 public class Generator extends JPanel implements ActionListener {
-	
-	public static final int SCREENY = 750, PANELX = 300;
+
+	public static final int SCREENY = 740, PANELX = 300, SMALLY = 10;
 	public static final int MAXGROUPS = 30, MAXSISTERS = 5, MAXPNMS = 100;
-	
-	JLabel[] grpLabels = new JLabel[MAXGROUPS];
-	JTextField[][] sisflds = new JTextField[MAXGROUPS][MAXSISTERS];
-	JTextArea pnmfld = new JTextArea();
-	
-	Sister[][] sisters = new Sister[MAXGROUPS][MAXSISTERS];
-	PNM[] pnms = new PNM[MAXPNMS];
-	
+
+	public JLabel[] grpLabels = new JLabel[MAXGROUPS];
+	public JTextField[][] sisflds = new JTextField[MAXGROUPS][MAXSISTERS];
+	public JTextArea pnmfld = new JTextArea();
+	public JTextArea outputfld = new JTextArea();
+	public JButton submitBtn = new JButton("SUBMIT");
+	public Sister[][] sisters;
+	public PNM[] pnms;
+
 	public Generator() {
-		super(new BorderLayout());
-		
-		////////////////////////////
-		// NORTH PANE: TITLES     //
-		////////////////////////////
-		JLabel groupsTitle = new JLabel("Bump Groups");
-		JLabel pnmsTitle = new JLabel("PNMs");
-		
-		JPanel titlePanel = new JPanel(new GridLayout(0, 2));
-		titlePanel.add(groupsTitle);
-		titlePanel.add(pnmsTitle);
+		super(new GridLayout(0,4));
 
 		////////////////////////////
-		// WEST PANE: BUMB GROUPS //
+		// BUMB GROUPS 			  //
 		////////////////////////////
 		JPanel groupPanel = new JPanel(new GridLayout(0, 1));
 
@@ -50,79 +42,169 @@ public class Generator extends JPanel implements ActionListener {
 			int num = i+1;
 			grpLabels[i] = new JLabel("Bump Group #" + num);
 			groupPanel.add(grpLabels[i]);
-			
+
 			// Sisters
 			for(int j = 0; j < MAXSISTERS; j++) {
-				sisflds[i][j] = new JTextField(" ", 15);
+				sisflds[i][j] = new JTextField("", 15);
 				groupPanel.add(sisflds[i][j]);
 			}
 		}
-		
+
 		JScrollPane groupPane = new JScrollPane(groupPanel);
 		groupPane.setPreferredSize(new Dimension(PANELX, SCREENY));
-        
+
 		////////////////////////////
-		// EAST PANE:  PNMS       //
+		// PNMS   				  //
 		////////////////////////////
-		JPanel pnmPanel = new JPanel(new GridLayout(0, 1));
-		pnmPanel.add(pnmfld);
-		
+		JPanel pnmPanel = new JPanel(new BorderLayout());
+
+		JLabel pnmTitle = new JLabel("PNMs");
+
+		pnmPanel.add(pnmTitle, BorderLayout.NORTH);
+		pnmPanel.add(pnmfld, BorderLayout.CENTER);
+
 		JScrollPane pnmPane = new JScrollPane(pnmPanel);
 		pnmPane.setPreferredSize(new Dimension(PANELX, SCREENY));
-		        
+
+		////////////////////////////
+		// OUTPUT  			      //
+		////////////////////////////
+		JPanel outputPanel = new JPanel(new BorderLayout());
+		submitBtn.addActionListener(this);
+
+		outputPanel.add(submitBtn, BorderLayout.NORTH);
+		outputPanel.add(outputfld, BorderLayout.CENTER);
+
+		JScrollPane outputPane = new JScrollPane(outputPanel);
+		outputPane.setPreferredSize(new Dimension(PANELX, SCREENY));
+
 		////////////////////////////
 		// ADD TO SCREEN          //
 		////////////////////////////
-		this.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-		this.add(titlePanel, BorderLayout.NORTH);
-		this.add(groupPane, BorderLayout.WEST);
-		this.add(pnmPane, BorderLayout.EAST);
-	
+		this.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));		
+		this.add(groupPane);
+		this.add(pnmPane);
+		this.add(outputPane);
+
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
+		int spot, numScoopSisters, numPNMs;
 		
+		outputfld.setText("");
+		sisters = new Sister[MAXGROUPS][MAXSISTERS];
+		pnms  = new PNM[MAXPNMS];
+
 		// Create Sisters
-		int group = 0, spot = 0;
+		int group = 0, pos = 0;
+		spot = 0;
+		for(int sisnum = 0; sisnum < MAXSISTERS; sisnum++) {
+			for(int grpnum = 0; grpnum < MAXGROUPS; grpnum++) {
+				String name = sisflds[grpnum][sisnum].getText();
+				if (name.length() > 0) {
+					group = grpnum + 1;
+					if(sisnum == 0) {
+						pos = 0;
+					} else {
+						spot++;
+						pos = spot;
+					}
+					sisters[grpnum][sisnum] = new Sister(name, group, pos);
+				} 
+			}
+		}
+		numScoopSisters = spot;
+
+		// Create PNMs
+		spot = 0;
+		for (String line : pnmfld.getText().split("\n")) {
+			pnms[spot] = new PNM(line, spot, false);
+			if (line.indexOf("*") >= 0) {
+				pnms[spot].setLegacy(true);
+			}
+			spot++;
+		}
+		numPNMs = spot;
+
+		// Calculate number of double scoops
+		int doubleScoops = numPNMs - numScoopSisters;
+		if(doubleScoops < 0) {
+			doubleScoops = 0;
+		}
+
+		int scoop = 0, sisSpot, pnmSpot = 0;
+		int remain = numPNMs;
+		String legacy, line;
 		for(int j = 0; j < MAXSISTERS; j++) {
 			for(int i = 0; i < MAXGROUPS; i++) {
-				group = i + 1;
-				spot++;
-				String name = sisflds[i][j].getText();
-				sisters[i][j] = new Sister(name, group, spot);
+				if (sisters[i][j] != null) {
+
+					legacy = " ";
+					String sisName = sisters[i][j].getName();
+					sisSpot = sisters[i][j].getSpot();
+					
+					// bump starter or no PNMs left to scoop
+					if (sisSpot == 0 || remain <= 0 || pnms[pnmSpot] == null) {
+						scoop = 0;
+
+					// scoop two PNMs at beginning,
+					// excluding legacies and PNMs before and after the legacy
+					} else if (doubleScoops > 0) {
+						int before = pnmSpot - 1;
+						if (before < 0)
+							before = 0;
+						int after = pnmSpot + 1;
+
+						if (pnms[pnmSpot].isLegacy()) {
+							scoop = 1;
+							legacy = "!!!";
+						} else if (pnms[before].isLegacy() || pnms[after].isLegacy()) {
+							scoop = 1;
+							
+						} else {
+							scoop = 2;
+							doubleScoops--;
+						}
+
+					// normal
+					} else {
+						scoop = 1;
+					}
+
+					line = sisName + " == Spot: " + sisSpot +
+							", Scoop: " + scoop + "  " + legacy + "\n";
+					outputfld.append(line);
+
+					pnmSpot += scoop;
+					remain -= scoop;
+				}
 			}
 		}
 		
-		// Create PNMs
-		int numPNMs = pnmfld.getRows();
-		int i = 0;
-		for (String line : pnmfld.getText().split("\n")) {
-			pnms[i] = new PNM(line, i, false);
-			if (line.indexOf('*') >= 0) {
-				pnms[i].setLegacy(true);
-			}
-			i++;
+		if (remain > 0) {
+			line = "Warning! Not enough sisters to scoop all PNMs. \n";
+			outputfld.append(line);
 		}
 	}
-	
+
 	private static void createAndShowGUI() {
 		//Create and set up the window.
 		JFrame frame = new JFrame("List Generator");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setResizable(false);
-		
+
 		//Create and set up the content pane.
-        JComponent newContentPane = new Generator();
-        newContentPane.setOpaque(true);
-        frame.setContentPane(newContentPane);
+		JComponent newContentPane = new Generator();
+		newContentPane.setOpaque(true);
+		frame.setContentPane(newContentPane);
 
 		//Display the window.
 		frame.pack();
 		frame.setVisible(true);
 
 	}
-	
+
 	public static void main(String[] args) {
 		//Schedule a job for the event dispatch thread:
 		//creating and showing this application's GUI.

@@ -36,8 +36,5 @@ public class Sister {
 		this.spot = spot;
 	}
 
-	
-
-
 
 }
