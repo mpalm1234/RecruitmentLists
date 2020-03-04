@@ -16,6 +16,8 @@ import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
+import java.sql.*;
+
 public class Generator extends JPanel implements ActionListener {
 
 	public static final int SCREENY = 740, PANELX = 300, SMALLY = 10;
@@ -29,6 +31,12 @@ public class Generator extends JPanel implements ActionListener {
 	public Sister[][] sisters;
 	public PNM[] pnms;
 
+	//Database info
+	private static final String USERNAME = "root";
+//	private static final String PASSWORD = 
+	private static final String CONN = "jdbc:mysql://127.0.0.1:3306/lists";
+	private static final String QUERY = "select * from lists.groups";
+
 	public Generator() {
 		super(new GridLayout(0,4));
 
@@ -36,6 +44,29 @@ public class Generator extends JPanel implements ActionListener {
 		// BUMB GROUPS 			  //
 		////////////////////////////
 		JPanel groupPanel = new JPanel(new GridLayout(0, 1));
+
+		try {  
+			Connection con = DriverManager.getConnection(CONN, USERNAME, PASSWORD);
+			Statement stmt = con.createStatement();  
+			ResultSet rs = stmt.executeQuery(QUERY);
+
+			while(rs.next()) {
+				int group = rs.getInt(1);
+				int order = rs.getInt(2);
+				String name = rs.getString(3);
+
+
+			}
+
+			rs.close();
+			stmt.close();
+			con.close(); 
+
+		} catch(SQLException e){
+			System.out.println(e);
+		}
+
+
 
 		for(int i = 0; i < MAXGROUPS; i++) {
 			// Labels
@@ -90,44 +121,20 @@ public class Generator extends JPanel implements ActionListener {
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		int spot, numScoopSisters, numPNMs;
-		
+		int numScoopSisters, numPNMs;
+		int group = 0, pos = 0, spot = 0;
+
 		outputfld.setText("");
 		sisters = new Sister[MAXGROUPS][MAXSISTERS];
 		pnms  = new PNM[MAXPNMS];
 
-		// Create Sisters
-		int group = 0, pos = 0;
-		spot = 0;
-		for(int sisnum = 0; sisnum < MAXSISTERS; sisnum++) {
-			for(int grpnum = 0; grpnum < MAXGROUPS; grpnum++) {
-				String name = sisflds[grpnum][sisnum].getText();
-				if (name.length() > 0) {
-					group = grpnum + 1;
-					if(sisnum == 0) {
-						pos = 0;
-					} else {
-						spot++;
-						pos = spot;
-					}
-					sisters[grpnum][sisnum] = new Sister(name, group, pos);
-				} 
-			}
-		}
+		createSisters(group, pos, spot);
 		numScoopSisters = spot;
 
-		// Create PNMs
 		spot = 0;
-		for (String line : pnmfld.getText().split("\n")) {
-			pnms[spot] = new PNM(line, spot, false);
-			if (line.indexOf("*") >= 0) {
-				pnms[spot].setLegacy(true);
-			}
-			spot++;
-		}
+		createPNMs(spot);
 		numPNMs = spot;
 
-		// Calculate number of double scoops
 		int doubleScoops = numPNMs - numScoopSisters;
 		if(doubleScoops < 0) {
 			doubleScoops = 0;
@@ -143,13 +150,13 @@ public class Generator extends JPanel implements ActionListener {
 					legacy = " ";
 					String sisName = sisters[i][j].getName();
 					sisSpot = sisters[i][j].getSpot();
-					
+
 					// bump starter or no PNMs left to scoop
 					if (sisSpot == 0 || remain <= 0 || pnms[pnmSpot] == null) {
 						scoop = 0;
 
-					// scoop two PNMs at beginning,
-					// excluding legacies and PNMs before and after the legacy
+						// scoop two PNMs at beginning,
+						// excluding legacies and PNMs before and after the legacy
 					} else if (doubleScoops > 0) {
 						int before = pnmSpot - 1;
 						if (before < 0)
@@ -161,13 +168,13 @@ public class Generator extends JPanel implements ActionListener {
 							legacy = "!!!";
 						} else if (pnms[before].isLegacy() || pnms[after].isLegacy()) {
 							scoop = 1;
-							
+
 						} else {
 							scoop = 2;
 							doubleScoops--;
 						}
 
-					// normal
+						// normal
 					} else {
 						scoop = 1;
 					}
@@ -181,11 +188,39 @@ public class Generator extends JPanel implements ActionListener {
 				}
 			}
 		}
-		
+
 		if (remain > 0) {
 			line = "Warning! Not enough sisters to scoop all PNMs. \n";
 			outputfld.append(line);
 		}
+	}
+
+	private void createSisters(int group, int pos, int spot) {
+		for(int sisnum = 0; sisnum < MAXSISTERS; sisnum++) {
+			for(int grpnum = 0; grpnum < MAXGROUPS; grpnum++) {
+				String name = sisflds[grpnum][sisnum].getText();
+				if (name.length() > 0) {
+					group = grpnum + 1;
+					if(sisnum == 0) {
+						pos = 0;
+					} else {
+						spot++;
+						pos = spot;
+					}
+					sisters[grpnum][sisnum] = new Sister(name, group, pos);
+				} 
+			}
+		}
+	}
+	
+	private void createPNMs(int spot) {
+		for (String line : pnmfld.getText().split("\n")) {
+			pnms[spot] = new PNM(line, spot, false);
+			if (line.indexOf("*") >= 0) {
+				pnms[spot].setLegacy(true);
+			}
+			spot++;
+		}		
 	}
 
 	private static void createAndShowGUI() {
@@ -206,11 +241,11 @@ public class Generator extends JPanel implements ActionListener {
 	}
 
 	public static void main(String[] args) {
+
 		//Schedule a job for the event dispatch thread:
 		//creating and showing this application's GUI.
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-				//Turn off metal's use of bold fonts
 				UIManager.put("swing.boldMetal", Boolean.FALSE);
 				createAndShowGUI();
 			}
