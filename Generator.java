@@ -44,18 +44,33 @@ public class Generator extends JPanel implements ActionListener {
 		// BUMB GROUPS 			  //
 		////////////////////////////
 		JPanel groupPanel = new JPanel(new GridLayout(0, 1));
+		String name;
 
 		try {  
 			Connection con = DriverManager.getConnection(CONN, USERNAME, PASSWORD);
 			Statement stmt = con.createStatement();  
 			ResultSet rs = stmt.executeQuery(QUERY);
+			boolean hasNext = true;
+			
+			for(int i = 0; i < MAXGROUPS; i++) {
+				// Labels
+				int num = i+1;
+				grpLabels[i] = new JLabel("Bump Group #" + num);
+				groupPanel.add(grpLabels[i]);
+				
+				rs.absolute(i+1);
 
-			while(rs.next()) {
-				int group = rs.getInt(1);
-				int order = rs.getInt(2);
-				String name = rs.getString(3);
-
-
+				// Sisters
+				for(int j = 0; j < MAXSISTERS; j++) {
+					if(hasNext && rs.getInt(1) == i+1) {
+						name = rs.getString(3);
+						hasNext = rs.next();
+					} else {
+						name = " ";
+					}
+					sisflds[i][j] = new JTextField(name, 15);
+					groupPanel.add(sisflds[i][j]);
+				}
 			}
 
 			rs.close();
@@ -64,21 +79,6 @@ public class Generator extends JPanel implements ActionListener {
 
 		} catch(SQLException e){
 			System.out.println(e);
-		}
-
-
-
-		for(int i = 0; i < MAXGROUPS; i++) {
-			// Labels
-			int num = i+1;
-			grpLabels[i] = new JLabel("Bump Group #" + num);
-			groupPanel.add(grpLabels[i]);
-
-			// Sisters
-			for(int j = 0; j < MAXSISTERS; j++) {
-				sisflds[i][j] = new JTextField("", 15);
-				groupPanel.add(sisflds[i][j]);
-			}
 		}
 
 		JScrollPane groupPane = new JScrollPane(groupPanel);
