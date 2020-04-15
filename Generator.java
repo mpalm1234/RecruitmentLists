@@ -4,38 +4,27 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-
+import javax.swing.*;
 import java.sql.*;
 
 public class Generator extends JPanel implements ActionListener {
 
-	public static final int SCREENY = 740, PANELX = 300, SMALLY = 10;
-	public static final int MAXGROUPS = 30, MAXSISTERS = 5, MAXPNMS = 100;
+	public static final int PANELX = 300, PANELY = 740,
+			MAXGROUPS = 30, MAXSISTERS = 5, MAXPNMS = 100;
 
 	public JLabel[] grpLabels = new JLabel[MAXGROUPS];
 	public JTextField[][] sisflds = new JTextField[MAXGROUPS][MAXSISTERS];
 	public JTextArea pnmfld = new JTextArea();
 	public JTextArea outputfld = new JTextArea();
+	public JButton savGrpBtn = new JButton("SAVE");
 	public JButton submitBtn = new JButton("SUBMIT");
 	public Sister[][] sisters;
 	public PNM[] pnms;
 
 	//Database info
 	private static final String USERNAME = "root";
-//	private static final String PASSWORD = 
-	private static final String CONN = "jdbc:mysql://127.0.0.1:3306/lists";
-	private static final String QUERY = "select * from lists.groups";
+	private static final String PASSWORD = "";
+	private static final String CONN = "jdbc:mysql://127.0.0.1:3306/lists?serverTimezone=UTC";
 
 	public Generator() {
 		super(new GridLayout(0,4));
@@ -49,24 +38,27 @@ public class Generator extends JPanel implements ActionListener {
 		try {  
 			Connection con = DriverManager.getConnection(CONN, USERNAME, PASSWORD);
 			Statement stmt = con.createStatement();  
-			ResultSet rs = stmt.executeQuery(QUERY);
+			ResultSet rs = stmt.executeQuery("select * from lists.groups");
 			boolean hasNext = true;
 			
+			if (rs.next() == false) {
+				System.out.println("ResultSet is empty in Java");
+				hasNext = false;
+			} 
+
 			for(int i = 0; i < MAXGROUPS; i++) {
 				// Labels
 				int num = i+1;
 				grpLabels[i] = new JLabel("Bump Group #" + num);
 				groupPanel.add(grpLabels[i]);
-				
-				rs.absolute(i+1);
 
 				// Sisters
 				for(int j = 0; j < MAXSISTERS; j++) {
-					if(hasNext && rs.getInt(1) == i+1) {
+					if(hasNext && rs.getInt(1) == num) {
 						name = rs.getString(3);
 						hasNext = rs.next();
 					} else {
-						name = " ";
+						name = "";
 					}
 					sisflds[i][j] = new JTextField(name, 15);
 					groupPanel.add(sisflds[i][j]);
@@ -81,8 +73,11 @@ public class Generator extends JPanel implements ActionListener {
 			System.out.println(e);
 		}
 
+		savGrpBtn.addActionListener(this);
+		groupPanel.add(savGrpBtn);
+
 		JScrollPane groupPane = new JScrollPane(groupPanel);
-		groupPane.setPreferredSize(new Dimension(PANELX, SCREENY));
+		groupPane.setPreferredSize(new Dimension(PANELX, PANELY));
 
 		////////////////////////////
 		// PNMS   				  //
@@ -95,7 +90,7 @@ public class Generator extends JPanel implements ActionListener {
 		pnmPanel.add(pnmfld, BorderLayout.CENTER);
 
 		JScrollPane pnmPane = new JScrollPane(pnmPanel);
-		pnmPane.setPreferredSize(new Dimension(PANELX, SCREENY));
+		pnmPane.setPreferredSize(new Dimension(PANELX, PANELY));
 
 		////////////////////////////
 		// OUTPUT  			      //
@@ -107,7 +102,7 @@ public class Generator extends JPanel implements ActionListener {
 		outputPanel.add(outputfld, BorderLayout.CENTER);
 
 		JScrollPane outputPane = new JScrollPane(outputPanel);
-		outputPane.setPreferredSize(new Dimension(PANELX, SCREENY));
+		outputPane.setPreferredSize(new Dimension(PANELX, PANELY));
 
 		////////////////////////////
 		// ADD TO SCREEN          //
@@ -121,6 +116,43 @@ public class Generator extends JPanel implements ActionListener {
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
+		if(e.getSource() == savGrpBtn) {
+			saveGroups();
+		} else if(e.getSource() == submitBtn) {
+			createLists();
+		}
+	}
+
+	public void saveGroups() {
+		try {  
+			Connection con = DriverManager.getConnection(CONN, USERNAME, PASSWORD);
+			Statement stmt = con.createStatement();  
+			stmt.executeUpdate("delete from lists.groups");
+			boolean hasNext = true;
+			String name;
+
+			for(int i = 0; i < MAXGROUPS; i++) {
+				for(int j = 0; j < MAXSISTERS; j++) {
+					if(sisflds[i][j] != null) {
+						name = sisflds[i][j].getText();
+						stmt.executeUpdate("insert into lists.groups values (" +
+				                   			(i+1) + ", " + (j+1) + ", '" + name + "')");
+					}
+					
+				}
+			}
+
+			stmt.close();
+			con.close(); 
+
+		} catch(SQLException e){
+			System.out.println(e);
+		}
+
+
+	}
+
+	public void createLists() {
 		int numScoopSisters, numPNMs;
 		int group = 0, pos = 0, spot = 0;
 
@@ -212,7 +244,7 @@ public class Generator extends JPanel implements ActionListener {
 			}
 		}
 	}
-	
+
 	private void createPNMs(int spot) {
 		for (String line : pnmfld.getText().split("\n")) {
 			pnms[spot] = new PNM(line, spot, false);
