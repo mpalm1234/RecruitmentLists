@@ -9,7 +9,7 @@ import java.sql.*;
 
 public class Generator extends JPanel implements ActionListener {
 
-	public static final int PANELX = 300, PANELY = 740,
+	public static final int PANELX = 350, PANELY = 740,
 			MAXGROUPS = 30, MAXSISTERS = 5, MAXPNMS = 100;
 
 	public JLabel[] grpLabels = new JLabel[MAXGROUPS];
@@ -20,6 +20,8 @@ public class Generator extends JPanel implements ActionListener {
 	public JButton submitBtn = new JButton("SUBMIT");
 	public Sister[][] sisters;
 	public PNM[] pnms;
+	
+	private static final String LEGACY = "  !!!LEGACY!!!";
 
 	//Database info
 	private static final String USERNAME = "root";
@@ -128,15 +130,12 @@ public class Generator extends JPanel implements ActionListener {
 			Connection con = DriverManager.getConnection(CONN, USERNAME, PASSWORD);
 			Statement stmt = con.createStatement();  
 			stmt.executeUpdate("delete from lists.groups");
-			boolean hasNext = true;
-			String name;
 
 			for(int i = 0; i < MAXGROUPS; i++) {
 				for(int j = 0; j < MAXSISTERS; j++) {
 					if(sisflds[i][j] != null) {
-						name = sisflds[i][j].getText();
 						stmt.executeUpdate("insert into lists.groups values (" +
-				                   			(i+1) + ", " + (j+1) + ", '" + name + "')");
+				             (i+1) + ", " + (j+1) + ", '" + sisflds[i][j].getText() + "')");
 					}
 					
 				}
@@ -148,24 +147,15 @@ public class Generator extends JPanel implements ActionListener {
 		} catch(SQLException e){
 			System.out.println(e);
 		}
-
-
 	}
 
 	public void createLists() {
-		int numScoopSisters, numPNMs;
-		int group = 0, pos = 0, spot = 0;
-
 		outputfld.setText("");
 		sisters = new Sister[MAXGROUPS][MAXSISTERS];
 		pnms  = new PNM[MAXPNMS];
 
-		createSisters(group, pos, spot);
-		numScoopSisters = spot;
-
-		spot = 0;
-		createPNMs(spot);
-		numPNMs = spot;
+		int numScoopSisters = createSisters();
+		int numPNMs = createPNMs();
 
 		int doubleScoops = numPNMs - numScoopSisters;
 		if(doubleScoops < 0) {
@@ -174,12 +164,10 @@ public class Generator extends JPanel implements ActionListener {
 
 		int scoop = 0, sisSpot, pnmSpot = 0;
 		int remain = numPNMs;
-		String legacy, line;
 		for(int j = 0; j < MAXSISTERS; j++) {
 			for(int i = 0; i < MAXGROUPS; i++) {
 				if (sisters[i][j] != null) {
 
-					legacy = " ";
 					String sisName = sisters[i][j].getName();
 					sisSpot = sisters[i][j].getSpot();
 
@@ -187,33 +175,33 @@ public class Generator extends JPanel implements ActionListener {
 					if (sisSpot == 0 || remain <= 0 || pnms[pnmSpot] == null) {
 						scoop = 0;
 
-						// scoop two PNMs at beginning,
-						// excluding legacies and PNMs before and after the legacy
+					// scoop two PNMs at beginning,
+					// excluding legacies and PNMs before and after the legacy
 					} else if (doubleScoops > 0) {
-						int before = pnmSpot - 1;
-						if (before < 0)
-							before = 0;
+						int before = ((pnmSpot == 0) ? 0 : pnmSpot - 1);
 						int after = pnmSpot + 1;
+						int after2 = pnmSpot + 2;
 
-						if (pnms[pnmSpot].isLegacy()) {
-							scoop = 1;
-							legacy = "!!!";
-						} else if (pnms[before].isLegacy() || pnms[after].isLegacy()) {
-							scoop = 1;
 
+						if (pnms[pnmSpot].isLegacy() ||
+							pnms[before].isLegacy() ||
+							pnms[after].isLegacy() ||
+						    pnms[after2].isLegacy()) {
+							scoop = 1;
 						} else {
 							scoop = 2;
 							doubleScoops--;
 						}
 
-						// normal
+					// normal
 					} else {
 						scoop = 1;
 					}
 
-					line = sisName + " == Spot: " + sisSpot +
-							", Scoop: " + scoop + "  " + legacy + "\n";
-					outputfld.append(line);
+					outputfld.append("\n" + sisName + " == Spot: " + sisSpot + ", Scoop: " + scoop);
+					if(pnms[pnmSpot] != null && pnms[pnmSpot].isLegacy() && sisSpot != 0) {
+						outputfld.append(LEGACY);
+					}
 
 					pnmSpot += scoop;
 					remain -= scoop;
@@ -222,12 +210,12 @@ public class Generator extends JPanel implements ActionListener {
 		}
 
 		if (remain > 0) {
-			line = "Warning! Not enough sisters to scoop all PNMs. \n";
-			outputfld.append(line);
+			outputfld.append("\nWarning! Not enough sisters to scoop all PNMs. \n");
 		}
 	}
 
-	private void createSisters(int group, int pos, int spot) {
+	private int createSisters() {
+		int spot = 0, group, pos;
 		for(int sisnum = 0; sisnum < MAXSISTERS; sisnum++) {
 			for(int grpnum = 0; grpnum < MAXGROUPS; grpnum++) {
 				String name = sisflds[grpnum][sisnum].getText();
@@ -243,9 +231,11 @@ public class Generator extends JPanel implements ActionListener {
 				} 
 			}
 		}
+		return spot;
 	}
 
-	private void createPNMs(int spot) {
+	private int createPNMs() {
+		int spot = 0;
 		for (String line : pnmfld.getText().split("\n")) {
 			pnms[spot] = new PNM(line, spot, false);
 			if (line.indexOf("*") >= 0) {
@@ -253,6 +243,7 @@ public class Generator extends JPanel implements ActionListener {
 			}
 			spot++;
 		}		
+		return spot;
 	}
 
 	private static void createAndShowGUI() {
